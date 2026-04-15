@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Dev Study: Ch 5-8</title>
+<style>
+  :root {
+    --primary: #2b6cb0;
+    --primary-dark: #1a365d;
+    --accent: #38b2ac;
+    --bg: #f7fafc;
+    --card: #ffffff;
+    --text: #1a202c;
+    --muted: #718096;
+    --success: #38a169;
+    --error: #e53e3e;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  header h1 { font-size: 28px; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 15px; }
+
+  .mode-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .mode-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 14px 18px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .mode-btn:hover { border-color: var(--primary); }
+  .mode-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  .chapter-filter {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 6px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .chip.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    transition: width 0.3s;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* Flashcard */
+  .flashcard {
+    min-height: 260px;
+    perspective: 1000px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  .flashcard-inner {
+    position: relative;
+    width: 100%;
+    min-height: 260px;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+  .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+  .flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    min-height: 260px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .flashcard-front {
+    background: linear-gradient(135deg, #4299e1, #2b6cb0);
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .flashcard-back {
+    background: linear-gradient(135deg, #48bb78, #2f855a);
+    color: white;
+    transform: rotateY(180deg);
+    font-size: 16px;
+    text-align: left;
+    line-height: 1.6;
+  }
+  .flashcard-back pre {
+    background: rgba(0,0,0,0.25);
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    overflow-x: auto;
+    width: 100%;
+    text-align: left;
+  }
+  .flip-hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  /* Quiz (MCQ) */
+  .question-text {
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .option {
+    display: block;
+    width: 100%;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    background: #f7fafc;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .option:hover:not(:disabled) { background: #edf2f7; border-color: var(--primary); }
+  .option.correct {
+    background: #c6f6d5;
+    border-color: var(--success);
+    color: #22543d;
+  }
+  .option.incorrect {
+    background: #fed7d7;
+    border-color: var(--error);
+    color: #742a2a;
+  }
+  .option:disabled { cursor: default; }
+
+  .fitb-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-family: 'SF Mono', Menlo, monospace;
+    margin-bottom: 12px;
+  }
+  .fitb-input:focus { outline: none; border-color: var(--primary); }
+
+  .feedback {
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.correct { background: #c6f6d5; color: #22543d; }
+  .feedback.incorrect { background: #fed7d7; color: #742a2a; }
+  .feedback code {
+    background: rgba(0,0,0,0.1);
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:disabled { background: var(--muted); cursor: default; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+  }
+  .btn-secondary:hover { background: var(--primary); color: white; }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  code, pre {
+    font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
+  }
+  code {
+    background: #edf2f7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 90%;
+  }
+  pre {
+    background: #1a202c;
+    color: #e2e8f0;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .score-display {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .score-display .percent {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 10px 0;
+  }
+  .score-display .label {
+    font-size: 18px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--border);
+    border-radius: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-right: 6px;
+  }
+  .tag-5 { background: #fef5e7; color: #975a16; }
+  .tag-6 { background: #e6fffa; color: #234e52; }
+  .tag-7 { background: #ebf8ff; color: #2a4365; }
+  .tag-8 { background: #faf5ff; color: #553c9a; }
+
+  @media (max-width: 600px) {
+    header { padding: 20px; }
+    header h1 { font-size: 22px; }
+    .card { padding: 20px; }
+    .mode-btn { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Web Dev Exam &mdash; Study Hub</h1>
+  <p>Chapters 5&ndash;8: jQuery &bull; React &bull; PHP &bull; MySQL &mdash; flashcards, quizzes, and fill-in-the-blanks</p>
+</header>
+
+<div class="mode-selector">
+  <button class="mode-btn active" data-mode="flashcards">Flashcards</button>
+  <button class="mode-btn" data-mode="mcq">Multiple Choice</button>
+  <button class="mode-btn" data-mode="fitb">Fill-in-the-Blank</button>
+</div>
+
+<div class="chapter-filter" id="chapterFilter">
+  <span class="chip active" data-ch="all">All Chapters</span>
+  <span class="chip" data-ch="5">Ch 5: jQuery</span>
+  <span class="chip" data-ch="6">Ch 6: React</span>
+  <span class="chip" data-ch="7">Ch 7: PHP</span>
+  <span class="chip" data-ch="8">Ch 8: SQL</span>
+</div>
+
+<div id="app"></div>
+
+<footer>
+  Made for studying with friends &bull; Shuffle button re-orders questions &bull; Press <kbd>Space</kbd> to flip flashcards
+</footer>
+</div>
+
+<script>
+// ========== DATA ==========
+const FLASHCARDS = [
+  // Chapter 5: jQuery
+  {ch: 5, q: "What is jQuery?", a: "A JavaScript <b>library</b> (not a framework) that simplifies DOM manipulation, events, animation, and AJAX."},
+  {ch: 5, q: "Basic jQuery syntax", a: "<pre>$(selector).action();</pre>$ = jQuery, (selector) = find elements, .action() = do something."},
+  {ch: 5, q: "What does $(document).ready() do?", a: "Runs code only AFTER the HTML document is fully loaded, preventing actions on elements that don't exist yet.<br><pre>$(document).ready(function(){\n  // code here\n});</pre>"},
+  {ch: 5, q: "The three basic jQuery selectors", a: "<b>Element:</b> <code>$(\"p\")</code><br><b>Id:</b> <code>$(\"#demo\")</code><br><b>Class:</b> <code>$(\".test\")</code>"},
+  {ch: 5, q: "What does $(this) refer to?", a: "The current element inside an event handler &mdash; the one that fired the event."},
+  {ch: 5, q: "jQuery click() method", a: "<pre>$(\"p\").click(function(){\n  $(this).hide();\n});</pre>"},
+  {ch: 5, q: "jQuery dblclick() method", a: "Fires on a double-click.<pre>$(\"p\").dblclick(function(){\n  $(this).hide();\n});</pre>"},
+  {ch: 5, q: "mouseenter() and mouseleave()", a: "<pre>$(\"#p1\").mouseenter(fn);  // on mouse in\n$(\"#p1\").mouseleave(fn);  // on mouse out</pre>"},
+  {ch: 5, q: "How many functions does hover() take?", a: "<b>Two.</b> First fires on mouseenter, second on mouseleave.<pre>$(\"#p1\").hover(enterFn, leaveFn);</pre>"},
+  {ch: 5, q: "The on() method", a: "General-purpose event binder.<pre>$(\"p\").on(\"click\", fn);\n\n// Multiple events:\n$(\"p\").on({\n  click: fn1,\n  mouseenter: fn2\n});</pre>"},
+  {ch: 5, q: "How to include jQuery via CDN", a: "<pre>&lt;script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"&gt;&lt;/script&gt;</pre>CDNs may be cached in users' browsers, giving faster loads."},
+  {ch: 5, q: "Is jQuery a library or a framework?", a: "A <b>library</b>. You call its functions. A framework (like React) imposes more structure on your code."},
+
+  // Chapter 6: React
+  {ch: 6, q: "What is React?", a: "A JavaScript library for building user interfaces, especially Single-Page Applications (SPAs). Made by Meta/Facebook."},
+  {ch: 6, q: "What is JSX?", a: "<b>JavaScript XML</b> &mdash; a syntax extension that lets you write HTML-like code inside JavaScript. Compiles to <code>React.createElement()</code> calls."},
+  {ch: 6, q: "JSX: how many root elements can a component return?", a: "Exactly <b>one</b>. Wrap siblings in a <code>&lt;div&gt;</code> or a Fragment <code>&lt;&gt;...&lt;/&gt;</code>."},
+  {ch: 6, q: "HTML class vs JSX", a: "HTML: <code>class=\"box\"</code><br>JSX: <code>className=\"box\"</code><br>(class is a reserved JS keyword)"},
+  {ch: 6, q: "Inline style in JSX", a: "Pass a <b>JavaScript object</b> with double braces:<pre>&lt;div style={{ color: \"red\", fontSize: \"18px\" }}&gt;</pre>"},
+  {ch: 6, q: "JSX comment syntax", a: "<code>{/* this is a JSX comment */}</code>"},
+  {ch: 6, q: "What are props?", a: "Data passed from a <b>parent</b> component to a <b>child</b>. Props are <b>read-only</b>.<pre>function Welcome({ name }) {\n  return &lt;h1&gt;Hello, {name}!&lt;/h1&gt;;\n}\n&lt;Welcome name=\"Alice\" /&gt;</pre>"},
+  {ch: 6, q: "What does useState return?", a: "An <b>array of two things</b>: the current value and a setter function.<pre>const [count, setCount] = useState(0);</pre>"},
+  {ch: 6, q: "React click event handler syntax", a: "<pre>&lt;button onClick={handleClick}&gt;Click&lt;/button&gt;</pre>Pass the function <b>reference</b>, not <code>handleClick()</code> (that would call it immediately)."},
+  {ch: 6, q: "Pass an argument to a click handler", a: "Use an arrow function:<pre>&lt;button onClick={() =&gt; handleClick(\"Alice\")}&gt;\n  Click\n&lt;/button&gt;</pre>"},
+  {ch: 6, q: "Controlled input in React", a: "<pre>const [x, setX] = useState(\"\");\n&lt;input value={x}\n  onChange={e =&gt; setX(e.target.value)} /&gt;</pre>"},
+  {ch: 6, q: "Prevent form reload on submit", a: "Call <code>event.preventDefault()</code> inside the handler.<pre>function handleSubmit(e) {\n  e.preventDefault();\n  ...\n}</pre>"},
+  {ch: 6, q: "Conditional rendering: ternary", a: "<pre>{isLoggedIn\n  ? &lt;Logout/&gt;\n  : &lt;Login/&gt;}</pre>"},
+  {ch: 6, q: "Conditional rendering: short-circuit", a: "<pre>{error && &lt;p&gt;{error}&lt;/p&gt;}</pre>Renders the <code>&lt;p&gt;</code> only if <code>error</code> is truthy."},
+  {ch: 6, q: "Render a list in React", a: "<pre>{items.map((item, i) =&gt; (\n  &lt;li key={i}&gt;{item}&lt;/li&gt;\n))}</pre>Every item needs a <b>unique key</b>."},
+  {ch: 6, q: "What is useEffect?", a: "A hook for side effects (fetches, timers, subscriptions) that run after render.<pre>useEffect(() =&gt; {\n  fetch(url).then(...);\n}, []);  // [] = run once on mount</pre>"},
+  {ch: 6, q: "useEffect dependency array meanings", a: "<b>[]</b>: run once on mount<br><b>[x]</b>: run whenever <code>x</code> changes<br><b>no array</b>: run after every render (usually a bug)"},
+  {ch: 6, q: "How to install React Router", a: "<pre>cd my-app\nnpm install react-router-dom</pre>"},
+  {ch: 6, q: "Basic React Router setup", a: "<pre>&lt;BrowserRouter&gt;\n  &lt;Routes&gt;\n    &lt;Route path=\"/\" element={&lt;Home/&gt;} /&gt;\n    &lt;Route path=\"/about\" element={&lt;About/&gt;} /&gt;\n    &lt;Route path=\"*\" element={&lt;NotFound/&gt;} /&gt;\n  &lt;/Routes&gt;\n&lt;/BrowserRouter&gt;</pre>"},
+  {ch: 6, q: "<Link> vs useNavigate()", a: "<b>&lt;Link&gt;</b>: component for user-clicked links (navbars)<br><b>useNavigate()</b>: hook for code-driven navigation (after form submit, etc.)<pre>const nav = useNavigate();\nnav(\"/dashboard\");\nnav(-1);  // go back</pre>"},
+  {ch: 6, q: "Root render with Vite + React 18", a: "<pre>import { createRoot } from 'react-dom/client';\nimport App from './App.jsx';\n\ncreateRoot(document.getElementById('root'))\n  .render(&lt;App /&gt;);</pre>"},
+
+  // Chapter 7: PHP
+  {ch: 7, q: "What does PHP stand for?", a: "<b>PHP: Hypertext Preprocessor</b> &mdash; a recursive acronym."},
+  {ch: 7, q: "XAMPP components", a: "<b>X</b>-platform + <b>A</b>pache (web server) + <b>M</b>ariaDB/MySQL (database) + <b>P</b>HP + <b>P</b>erl. Plus phpMyAdmin."},
+  {ch: 7, q: "Where do PHP files live in XAMPP?", a: "In the <b>htdocs</b> folder. Access via <code>http://localhost/file.php</code>."},
+  {ch: 7, q: "PHP script tags", a: "<pre>&lt;?php\n  echo \"Hello\";\n?&gt;</pre>Every statement ends with <code>;</code>."},
+  {ch: 7, q: "PHP case sensitivity", a: "<b>Keywords</b> (if, echo, functions): NOT case-sensitive<br><b>Variables</b>: ARE case-sensitive (<code>$Name</code> &ne; <code>$name</code>)"},
+  {ch: 7, q: "PHP string concatenation operator", a: "The <b>dot</b> <code>.</code><pre>echo \"Hi \" . $name . \"!\";</pre><code>.=</code> appends: <code>$s .= \"more\";</code>"},
+  {ch: 7, q: "Variable interpolation in PHP strings", a: "Only works in <b>double-quoted</b> strings:<pre>echo \"Hi $name\";  // interpolates\necho 'Hi $name';  // literal</pre>"},
+  {ch: 7, q: "Using a global variable inside a function", a: "Use the <code>global</code> keyword:<pre>function f() {\n  global $x;\n  echo $x;\n}</pre>Or <code>$GLOBALS['x']</code>"},
+  {ch: 7, q: "PHP static variable", a: "Retains its value across calls (still local scope).<pre>function counter() {\n  static $n = 0;\n  $n++;\n  echo $n;\n}</pre>Output: 1, 2, 3, ..."},
+  {ch: 7, q: "PHP == vs ===", a: "<b>==</b>: equal value (loose, with type coercion)<br><b>===</b>: equal value AND type (strict)"},
+  {ch: 7, q: "PHP foreach on associative array", a: "<pre>foreach ($age as $key =&gt; $value) {\n  echo \"$key=$value\";\n}</pre>"},
+  {ch: 7, q: "Declare a PHP function with a default argument", a: "<pre>function setH($h = 50) {\n  echo $h;\n}\nsetH();     // uses 50\nsetH(100);  // uses 100</pre>"},
+  {ch: 7, q: "Pass argument by reference in PHP", a: "Prefix with <code>&amp;</code>:<pre>function addFive(&amp;$v) {\n  $v += 5;\n}</pre>Changes affect the caller's variable."},
+  {ch: 7, q: "PHP superglobals list", a: "<code>$_GET</code>, <code>$_POST</code>, <code>$_REQUEST</code>, <code>$_SERVER</code>, <code>$_FILES</code>, <code>$_COOKIE</code>, <code>$_SESSION</code>, <code>$GLOBALS</code>"},
+  {ch: 7, q: "GET vs POST", a: "<b>GET</b>: data in URL, visible, bookmarkable, non-sensitive only<br><b>POST</b>: data in request body, invisible, for sensitive data"},
+  {ch: 7, q: "Prevent XSS in PHP", a: "Wrap echoed user input in <code>htmlspecialchars()</code>:<pre>echo htmlspecialchars($_POST[\"name\"]);</pre>Converts <code>&lt; &gt; \" '</code> to HTML entities."},
+  {ch: 7, q: "Hash a password in PHP", a: "<pre>$hash = password_hash($pw, PASSWORD_DEFAULT);</pre>Uses bcrypt. Never store plaintext passwords."},
+  {ch: 7, q: "Verify a password in PHP", a: "<pre>if (password_verify($pw, $hash)) {\n  // login success\n}</pre>"},
+  {ch: 7, q: "Start a session in PHP", a: "<pre>session_start();\n$_SESSION[\"user_id\"] = 42;</pre>Call <code>session_start()</code> on every page that uses <code>$_SESSION</code>."},
+  {ch: 7, q: "Destroy a session in PHP", a: "<pre>session_start();\nsession_destroy();\nheader(\"Location: login.php\");\nexit;</pre>"},
+  {ch: 7, q: "PHP indexed vs associative array", a: "<b>Indexed:</b> <code>$c = [\"A\",\"B\"]; echo $c[0];</code><br><b>Associative:</b> <code>$a = [\"Peter\"=&gt;35]; echo $a[\"Peter\"];</code>"},
+  {ch: 7, q: "count() function", a: "Returns the number of elements in an array.<pre>count([\"a\",\"b\",\"c\"])  // 3</pre>"},
+  {ch: 7, q: "PHP echo vs print", a: "<b>echo</b>: no return, can take multiple comma args, slightly faster<br><b>print</b>: returns 1, one arg"},
+
+  // Chapter 8: MySQL / SQL
+  {ch: 8, q: "What is MySQL?", a: "The most popular open-source <b>relational database management system (RDBMS)</b>. Uses SQL. Default port: 3306."},
+  {ch: 8, q: "MariaDB vs MySQL", a: "MariaDB was forked from MySQL around 5.5. Mostly a drop-in replacement &mdash; same queries, same files."},
+  {ch: 8, q: "Connect to MySQL from PHP", a: "<pre>$conn = new mysqli(\"localhost\",\"root\",\"\",\"db\");\nif ($conn-&gt;connect_error)\n  die(\"Fail: \".$conn-&gt;connect_error);</pre>"},
+  {ch: 8, q: "mysqli_query function", a: "Runs an SQL query; returns a result set (for SELECT) or true/false.<pre>$result = mysqli_query($conn, \"SELECT * FROM users\");</pre>"},
+  {ch: 8, q: "mysqli_fetch_assoc", a: "Fetches the next row as an associative array (keyed by column name).<pre>while ($row = mysqli_fetch_assoc($result)) {\n  echo $row[\"name\"];\n}</pre>"},
+  {ch: 8, q: "Create a table", a: "<pre>CREATE TABLE users (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  username VARCHAR(50) NOT NULL UNIQUE,\n  age INT\n);</pre>"},
+  {ch: 8, q: "AUTO_INCREMENT", a: "Automatically generates the next integer value (for a primary key column)."},
+  {ch: 8, q: "PRIMARY KEY", a: "Unique identifier for each row. Automatically indexed and NOT NULL."},
+  {ch: 8, q: "INSERT INTO syntax", a: "<pre>INSERT INTO users (name, age)\nVALUES ('Alice', 25);</pre>"},
+  {ch: 8, q: "SELECT all columns from a table", a: "<pre>SELECT * FROM users;</pre>"},
+  {ch: 8, q: "Filter rows with WHERE", a: "<pre>SELECT * FROM users\nWHERE age &gt;= 18\n  AND city = 'Nashville';</pre>String values use <b>single quotes</b>."},
+  {ch: 8, q: "SQL comparison operators", a: "<code>=</code> <code>&gt;</code> <code>&lt;</code> <code>&gt;=</code> <code>&lt;=</code> <code>&lt;&gt;</code> (or <code>!=</code>)"},
+  {ch: 8, q: "LIKE with wildcards", a: "<b>%</b> = any number of characters<br><b>_</b> = exactly one character<pre>WHERE name LIKE 'A%'    -- starts with A\nWHERE name LIKE '_lice' -- Alice, Blice, etc.</pre>"},
+  {ch: 8, q: "BETWEEN operator", a: "<pre>WHERE age BETWEEN 18 AND 30</pre>Inclusive of both endpoints."},
+  {ch: 8, q: "IN operator", a: "<pre>WHERE city IN ('Nashville','Memphis','Knoxville')</pre>"},
+  {ch: 8, q: "UPDATE syntax (warning!)", a: "<pre>UPDATE users SET age=26\nWHERE username='alice';</pre>Without WHERE, updates ALL rows!"},
+  {ch: 8, q: "DELETE syntax (warning!)", a: "<pre>DELETE FROM users WHERE id=3;</pre>Without WHERE, deletes ALL rows!"},
+  {ch: 8, q: "ALTER TABLE: add a column", a: "<pre>ALTER TABLE users\nADD email VARCHAR(100);</pre>Also <code>DROP COLUMN</code> and <code>MODIFY COLUMN</code>."},
+  {ch: 8, q: "ORDER BY", a: "<pre>SELECT * FROM users\nORDER BY age DESC, name ASC;</pre>ASC is the default."},
+  {ch: 8, q: "LIMIT", a: "<pre>SELECT * FROM users\nORDER BY age DESC\nLIMIT 5;</pre>Returns only the first 5 rows."},
+  {ch: 8, q: "Aggregate functions", a: "<code>COUNT(*)</code>, <code>MIN(col)</code>, <code>MAX(col)</code>, <code>AVG(col)</code>, <code>SUM(col)</code>"},
+  {ch: 8, q: "DISTINCT", a: "Returns only unique values.<pre>SELECT DISTINCT city FROM users;</pre>"},
+  {ch: 8, q: "DROP TABLE vs DELETE FROM", a: "<b>DROP TABLE users;</b> &mdash; removes the table completely<br><b>DELETE FROM users;</b> &mdash; removes all rows; table still exists"},
+  {ch: 8, q: "mysqli prepared statement", a: "<pre>$stmt = $conn-&gt;prepare(\n  \"SELECT id FROM users WHERE username=?\"\n);\n$stmt-&gt;bind_param(\"s\", $username);\n$stmt-&gt;execute();</pre>Prevents SQL injection."},
+  {ch: 8, q: "bind_param type letters", a: "<b>s</b> = string<br><b>i</b> = integer<br><b>d</b> = double (float)<br><b>b</b> = blob"},
+];
+
+const MCQS = [
+  // jQuery
+  {ch:5, q:"Which symbol defines/accesses jQuery?", opts:["#","&","$","@"], ans:2, exp:"The dollar sign $ is the jQuery shorthand."},
+  {ch:5, q:"What does $(document).ready() ensure?", opts:["Page refreshes","Code runs after HTML loads","Library downloads","DOM is removed"], ans:1, exp:"It prevents code from running on elements that don't exist yet."},
+  {ch:5, q:"How do you select the class 'demo'?", opts:["$(\"#demo\")","$(\"demo\")","$(\".demo\")","$(\"*demo\")"], ans:2, exp:". is the class selector; # is for id."},
+  {ch:5, q:"hover() takes how many functions?", opts:["0","1","2","3"], ans:2, exp:"First for mouseenter, second for mouseleave."},
+  {ch:5, q:"$(this) inside a handler refers to:", opts:["jQuery itself","the document","the current element","the window"], ans:2, exp:"The element that fired the event, wrapped in jQuery."},
+  {ch:5, q:"Which hides all <p> elements?", opts:["$(\".p\").hide()","$(\"#p\").hide()","$(\"p\").hide()","$(p).hide()"], ans:2, exp:"No prefix = element selector."},
+  {ch:5, q:"jQuery is a:", opts:["framework","library","preprocessor","server"], ans:1, exp:"A library offers functions you call; a framework imposes more structure."},
+  {ch:5, q:"Which method fires on double-click?", opts:["click()","dblclick()","doubleclick()","tap()"], ans:1, exp:"dblclick() is the double-click event method."},
+  // React
+  {ch:6, q:"JSX stands for:", opts:["Java Syntax eXt","JavaScript XML","JSON Simplified","Java Server Xlet"], ans:1, exp:"JavaScript XML &mdash; HTML-like syntax in JS."},
+  {ch:6, q:"JSX inline style syntax:", opts:["style=\"color:red;\"","style={color:'red'}","style={{color:'red'}}","style=(color:red)"], ans:2, exp:"Double braces: outer = JSX expression, inner = JS object."},
+  {ch:6, q:"How does a child get data from a parent?", opts:["state","props","useEffect","context only"], ans:1, exp:"Props pass data one way: parent to child."},
+  {ch:6, q:"What does useState(0) return?", opts:["number 0","object {value,setter}","array [value,setter]","undefined"], ans:2, exp:"Destructure with [x, setX] = useState(0)."},
+  {ch:6, q:"HTML's class becomes ___ in JSX:", opts:["cssClass","className","class-name","classList"], ans:1, exp:"class is a reserved JS keyword."},
+  {ch:6, q:"Every item from .map() needs a:", opts:["id","ref","key","index"], ans:2, exp:"React uses the key to efficiently update lists."},
+  {ch:6, q:"Which hook handles side effects?", opts:["useState","useRef","useEffect","useMemo"], ans:2, exp:"useEffect runs after render. [] = run once on mount."},
+  {ch:6, q:"Stop a React form from reloading:", opts:["return false;","event.stopPropagation()","event.preventDefault()","event.cancel()"], ans:2, exp:"preventDefault() halts the default browser action."},
+  {ch:6, q:"Which is correct for an onClick that calls fn on click?", opts:["onclick={fn}","onClick={fn()}","onClick={fn}","onClick=fn"], ans:2, exp:"camelCase AND a function reference (no parens)."},
+  {ch:6, q:"Which <Route> element handles unknown URLs?", opts:["path=\"404\"","path=\"*\"","path=\"/unknown\"","path=null"], ans:1, exp:"* is the wildcard for 404 handling."},
+  {ch:6, q:"useNavigate() is:", opts:["a component","a hook","a prop","a superglobal"], ans:1, exp:"It's a React Router hook that returns a navigate function."},
+  // PHP
+  {ch:7, q:"PHP scripts start and end with:", opts:["<? ?>","<?php ?>","<%php %>","<!--php -->"], ans:1, exp:"<?php ... ?> is the standard tag."},
+  {ch:7, q:"PHP variables are:", opts:["case-insensitive","declared with var","prefixed with $, case-sensitive","untyped and global"], ans:2, exp:"$name and $Name are different variables."},
+  {ch:7, q:"PHP string concatenation uses:", opts:["+","\u00a0.\u00a0","&",","], ans:1, exp:"A dot (.). Plus is numeric addition."},
+  {ch:7, q:"Access a global inside a function by:", opts:["doing nothing","using 'global $x;' or $GLOBALS['x']","use $x","it's impossible"], ans:1, exp:"Functions have their own scope."},
+  {ch:7, q:"POST form data goes in:", opts:["$_GET","$_POST","$_SERVER","$_FILES"], ans:1, exp:"$_POST holds data from method=\"post\"."},
+  {ch:7, q:"Which function prevents XSS?", opts:["strip_tags()","htmlspecialchars()","addslashes()","urlencode()"], ans:1, exp:"It converts < > \" ' to HTML entities."},
+  {ch:7, q:"A static variable in a function:", opts:["is global","keeps value across calls","cannot change","is gc'd each call"], ans:1, exp:"Still local scope, but value persists."},
+  {ch:7, q:"Which correctly shows var value in echo?", opts:["echo '$x'","echo \"$x\"","echo x","echo $x,"], ans:1, exp:"Double quotes interpolate; single quotes are literal."},
+  {ch:7, q:"password_hash() uses which algorithm by default?", opts:["MD5","SHA-1","bcrypt","AES"], ans:2, exp:"PASSWORD_DEFAULT currently maps to bcrypt."},
+  {ch:7, q:"To end a PHP session:", opts:["exit()","session_destroy()","session_end()","unset($_SESSION)"], ans:1, exp:"session_destroy() removes session data; call session_start() first."},
+  // SQL
+  {ch:8, q:"Which statement retrieves rows?", opts:["GET","FETCH","SELECT","RETRIEVE"], ans:2, exp:"SELECT col FROM table."},
+  {ch:8, q:"Filter rows with:", opts:["IF","WHERE","HAVING","FILTER"], ans:1, exp:"WHERE filters rows; HAVING filters groups."},
+  {ch:8, q:"LIKE pattern matching 'A%' matches:", opts:["Exactly \"A%\"","Any string containing A","Any string starting with A","Any single char starting A"], ans:2, exp:"% = any length; _ = single char."},
+  {ch:8, q:"Add a column to a table:", opts:["CREATE ... ADD","ALTER TABLE ... ADD","INSERT ... ADD","UPDATE ... ADD"], ans:1, exp:"ALTER TABLE users ADD email VARCHAR(100);"},
+  {ch:8, q:"DELETE without WHERE:", opts:["errors","removes the table","deletes all rows","does nothing"], ans:2, exp:"All rows gone; table remains. Always include WHERE!"},
+  {ch:8, q:"Row count function:", opts:["SUM(*)","TOTAL(*)","COUNT(*)","LENGTH(*)"], ans:2, exp:"COUNT(*) returns total rows; COUNT(col) counts non-NULLs."},
+  {ch:8, q:"Fetch a row as assoc array:", opts:["mysqli_query","mysqli_fetch_array","mysqli_fetch_assoc","mysqli_get_row"], ans:2, exp:"Keyed by column name."},
+  {ch:8, q:"In bind_param(\"ii\", $a, $b), 'ii' means:", opts:["two integers","two strings","invalid","ignore"], ans:0, exp:"s=string, i=int, d=double, b=blob."},
+  {ch:8, q:"Descending sort:", opts:["ORDER BY col","ORDER BY col ASC","ORDER BY col DESC","SORT col DESC"], ans:2, exp:"ASC is default; DESC for descending."},
+  {ch:8, q:"Unique values only:", opts:["UNIQUE","DISTINCT","GROUP","ONLY"], ans:1, exp:"SELECT DISTINCT col FROM ..."},
+  {ch:8, q:"Default MySQL port:", opts:["80","443","3306","5432"], ans:2, exp:"3306 is MySQL/MariaDB; 5432 is PostgreSQL."},
+  {ch:8, q:"AUTO_INCREMENT lets a column:", opts:["hold floats","be NULL","auto-generate next int","be unique"], ans:2, exp:"Used for primary-key columns."},
+];
+
+const FITBS = [
+  // jQuery
+  {ch:5, q:"$(document).______(function(){ ... }); ensures code runs after HTML loads.", ans:["ready"], hint:"Event name"},
+  {ch:5, q:"To select the element with id=\"demo\" in jQuery: $(\"______\")", ans:["#demo"], hint:"Include the prefix"},
+  {ch:5, q:"The general-purpose event binder is the .______() method.", ans:["on"], hint:"Two letters"},
+  {ch:5, q:"The jQuery method for double-click is .______().", ans:["dblclick"], hint:"dbl + something"},
+  {ch:5, q:"$(this).______(); hides the current element.", ans:["hide"], hint:"4 letters"},
+  {ch:5, q:"Two methods combined in hover() are ______() and mouseleave().", ans:["mouseenter"], hint:"Goes with mouseleave"},
+
+  // React
+  {ch:6, q:"The React hook to manage state in a function component is ______.", ans:["useState"], hint:"Starts with 'use'"},
+  {ch:6, q:"HTML's class attribute becomes ______ in JSX.", ans:["className"], hint:"Camel case"},
+  {ch:6, q:"A JSX comment is written as ______.", ans:["{/* ... */}","{/**/}"], hint:"Uses braces and /* */"},
+  {ch:6, q:"To install React Router, run: npm install ______", ans:["react-router-dom"], hint:"react-router-..."},
+  {ch:6, q:"In useEffect(fn, []), the empty array means the effect runs ______ time(s).", ans:["one","once","1"], hint:"The number"},
+  {ch:6, q:"To prevent a form from reloading, call event.______() inside the handler.", ans:["preventDefault"], hint:"Two words camel-cased"},
+  {ch:6, q:"Every item in a .map()'d list needs a unique ______ prop.", ans:["key"], hint:"3 letters"},
+  {ch:6, q:"useNavigate() returns a function; calling it with ______ goes back.", ans:["-1"], hint:"A number"},
+  {ch:6, q:"A React component cannot return two sibling elements directly; wrap them in a div or a ______.", ans:["Fragment","<></>","fragment"], hint:"Special React wrapper"},
+
+  // PHP
+  {ch:7, q:"A PHP variable that keeps its value between function calls uses the ______ keyword.", ans:["static"], hint:"6 letters"},
+  {ch:7, q:"PHP string concatenation uses the ______ operator (single char).", ans:[".","dot"], hint:"One char"},
+  {ch:7, q:"POST form data is available in the superglobal ______.", ans:["$_POST"], hint:"Includes the $"},
+  {ch:7, q:"Hash a password with ______($pw, PASSWORD_DEFAULT);", ans:["password_hash"], hint:"One word, underscore"},
+  {ch:7, q:"Verify a submitted password against a hash with ______($pw, $hash);", ans:["password_verify"], hint:"One word, underscore"},
+  {ch:7, q:"Escape user input to prevent XSS using ______().", ans:["htmlspecialchars"], hint:"One word"},
+  {ch:7, q:"To use a global $x inside a function, write: ______ $x;", ans:["global"], hint:"6 letters"},
+  {ch:7, q:"XAMPP's H in htdocs: files go in the ______ folder.", ans:["htdocs"], hint:"Starts with ht"},
+  {ch:7, q:"The request method is stored in $_SERVER['______'].", ans:["REQUEST_METHOD"], hint:"UPPERCASE"},
+  {ch:7, q:"Start a PHP session with ______();", ans:["session_start"], hint:"Function name"},
+  {ch:7, q:"PHP's strict equality operator is ______.", ans:["==="], hint:"Three chars"},
+  {ch:7, q:"A function arg passed by reference uses ______ before the variable name.", ans:["&"], hint:"One char"},
+
+  // SQL
+  {ch:8, q:"Sort descending: ORDER BY col ______", ans:["DESC","desc"], hint:"4 letters"},
+  {ch:8, q:"Return only unique values: SELECT ______ col FROM ...", ans:["DISTINCT","distinct"], hint:"8 letters"},
+  {ch:8, q:"UPDATE users ______ age=29 WHERE id=3;", ans:["SET","set"], hint:"3 letters"},
+  {ch:8, q:"Column that auto-generates next number: declare it ______ in CREATE TABLE.", ans:["AUTO_INCREMENT","auto_increment"], hint:"UPPERCASE with underscore"},
+  {ch:8, q:"Limit result to 5 rows: SELECT ... ______ 5;", ans:["LIMIT","limit"], hint:"5 letters"},
+  {ch:8, q:"Range filter: WHERE age ______ 18 AND 30", ans:["BETWEEN","between"], hint:"7 letters"},
+  {ch:8, q:"The fetch function that returns a row keyed by column name is ______.", ans:["mysqli_fetch_assoc","fetch_assoc"], hint:"Ends in _assoc"},
+  {ch:8, q:"Pattern match any string starting with 'A': WHERE name LIKE '______'", ans:["A%","a%"], hint:"1 letter + wildcard"},
+  {ch:8, q:"Default MySQL port is ______.", ans:["3306"], hint:"4 digits"},
+  {ch:8, q:"Aggregate for average: ______(col)", ans:["AVG","avg"], hint:"3 letters"},
+];
+
+// ========== STATE ==========
+let state = {
+  mode: "flashcards",
+  chapter: "all",
+  order: [],
+  idx: 0,
+  correct: 0,
+  attempted: 0,
+  finished: false,
+};
+
+function currentData() {
+  if (state.mode === "flashcards") return FLASHCARDS;
+  if (state.mode === "mcq") return MCQS;
+  return FITBS;
+}
+function filtered() {
+  const all = currentData();
+  return state.chapter === "all" ? all : all.filter(x => x.ch === Number(state.chapter));
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function reset() {
+  const data = filtered();
+  state.order = shuffle(data.map((_, i) => i));
+  state.idx = 0;
+  state.correct = 0;
+  state.attempted = 0;
+  state.finished = false;
+  render();
+}
+
+// ========== RENDER ==========
+function render() {
+  const app = document.getElementById("app");
+  const data = filtered();
+  if (data.length === 0) {
+    app.innerHTML = `<div class="card"><p>No questions for that chapter in this mode.</p></div>`;
+    return;
+  }
+  if (state.finished) return renderFinished();
+
+  const item = data[state.order[state.idx]];
+  const tagClass = `tag tag-${item.ch}`;
+  const tagText = `Ch ${item.ch}: ${["", "", "", "", "", "jQuery", "React", "PHP", "SQL"][item.ch]}`;
+  const pct = Math.round((state.idx / state.order.length) * 100);
+
+  let html = `
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="stats">
+      <span>Q ${state.idx + 1} of ${state.order.length}</span>
+      <span>${state.correct}/${state.attempted} correct</span>
+    </div>
+    <div class="card">
+      <div style="margin-bottom:12px"><span class="${tagClass}">${tagText}</span></div>
+  `;
+
+  if (state.mode === "flashcards") {
+    html += `
+      <p class="flip-hint">Click the card (or press Space) to flip</p>
+      <div class="flashcard" id="fc">
+        <div class="flashcard-inner">
+          <div class="flashcard-front">${item.q}</div>
+          <div class="flashcard-back">${item.a}</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn btn-secondary" onclick="prev()">&larr; Previous</button>
+        <button class="btn" onclick="next()">Next &rarr;</button>
+        <button class="btn btn-secondary" onclick="reset()">Shuffle &amp; Restart</button>
+      </div>
+    `;
+  } else if (state.mode === "mcq") {
+    html += `<p class="question-text">${item.q}</p>`;
+    item.opts.forEach((opt, i) => {
+      html += `<button class="option" data-i="${i}" onclick="pickMCQ(${i})">${String.fromCharCode(65+i)}) ${opt}</button>`;
+    });
+    html += `<div id="feedback"></div>`;
+    html += `<div class="controls" id="next-controls" style="margin-top:14px;display:none">
+      <button class="btn" onclick="next()">Next Question &rarr;</button>
+      <button class="btn btn-secondary" onclick="reset()">Shuffle &amp; Restart</button>
+    </div>`;
+  } else { // fitb
+    html += `<p class="question-text">${item.q}</p>
+      <input class="fitb-input" id="fitb" placeholder="Type your answer" autofocus />
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Hint: ${item.hint}</p>
+      <div class="controls">
+        <button class="btn" onclick="checkFITB()">Check Answer</button>
+        <button class="btn btn-secondary" onclick="skipFITB()">Skip</button>
+      </div>
+      <div id="feedback"></div>
+      <div class="controls" id="next-controls" style="margin-top:14px;display:none">
+        <button class="btn" onclick="next()">Next Question &rarr;</button>
+        <button class="btn btn-secondary" onclick="reset()">Shuffle &amp; Restart</button>
+      </div>`;
+  }
+
+  html += `</div>`;
+  app.innerHTML = html;
+
+  if (state.mode === "flashcards") {
+    document.getElementById("fc").addEventListener("click", e => {
+      e.currentTarget.classList.toggle("flipped");
+    });
+  }
+  if (state.mode === "fitb") {
+    const inp = document.getElementById("fitb");
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter") checkFITB();
+    });
+    inp.focus();
+  }
+}
+
+function renderFinished() {
+  const pct = state.attempted === 0 ? 0 : Math.round((state.correct / state.attempted) * 100);
+  const emoji = pct >= 90 ? "&#127942;" : pct >= 75 ? "&#128079;" : pct >= 60 ? "&#128170;" : "&#128218;";
+  const msg = pct >= 90 ? "Exam-ready! Take a well-deserved break." :
+              pct >= 75 ? "Solid. Review weak areas tonight." :
+              pct >= 60 ? "Keep pushing. Re-read the study guide for weak chapters." :
+              "Time to study more. Focus on the chapters where you missed the most.";
+  document.getElementById("app").innerHTML = `
+    <div class="card score-display">
+      <div style="font-size:56px">${emoji}</div>
+      <div class="percent">${pct}%</div>
+      <div class="label">${state.correct} correct out of ${state.attempted}</div>
+      <p style="margin:20px 0;font-size:16px">${msg}</p>
+      <div class="controls" style="justify-content:center">
+        <button class="btn" onclick="reset()">Restart</button>
+      </div>
+    </div>
+  `;
+}
+
+function next() {
+  if (state.idx + 1 >= state.order.length) {
+    state.finished = true;
+  } else {
+    state.idx++;
+  }
+  render();
+}
+function prev() {
+  if (state.idx > 0) { state.idx--; render(); }
+}
+
+function pickMCQ(i) {
+  const item = filtered()[state.order[state.idx]];
+  state.attempted++;
+  const opts = document.querySelectorAll(".option");
+  opts.forEach((el, idx) => {
+    el.disabled = true;
+    if (idx === item.ans) el.classList.add("correct");
+    if (idx === i && i !== item.ans) el.classList.add("incorrect");
+  });
+  const fb = document.getElementById("feedback");
+  if (i === item.ans) {
+    state.correct++;
+    fb.className = "feedback correct";
+    fb.innerHTML = `<b>Correct!</b> ${item.exp}`;
+  } else {
+    fb.className = "feedback incorrect";
+    fb.innerHTML = `<b>Not quite.</b> The answer is <b>${String.fromCharCode(65+item.ans)}) ${item.opts[item.ans]}</b>. ${item.exp}`;
+  }
+  document.getElementById("next-controls").style.display = "flex";
+}
+
+function checkFITB() {
+  const item = filtered()[state.order[state.idx]];
+  const input = document.getElementById("fitb");
+  const val = (input.value || "").trim();
+  if (!val) return;
+  state.attempted++;
+  const fb = document.getElementById("feedback");
+  const match = item.ans.some(a => a.toLowerCase() === val.toLowerCase());
+  if (match) {
+    state.correct++;
+    fb.className = "feedback correct";
+    fb.innerHTML = `<b>Correct!</b>`;
+  } else {
+    fb.className = "feedback incorrect";
+    fb.innerHTML = `<b>Not quite.</b> Accepted answers: <code>${item.ans.join("</code>, <code>")}</code>`;
+  }
+  input.disabled = true;
+  document.getElementById("next-controls").style.display = "flex";
+}
+
+function skipFITB() {
+  const item = filtered()[state.order[state.idx]];
+  const fb = document.getElementById("feedback");
+  state.attempted++;
+  fb.className = "feedback incorrect";
+  fb.innerHTML = `<b>Skipped.</b> Accepted answers: <code>${item.ans.join("</code>, <code>")}</code>`;
+  document.getElementById("fitb").disabled = true;
+  document.getElementById("next-controls").style.display = "flex";
+}
+
+// ========== EVENT WIRING ==========
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.mode = btn.dataset.mode;
+    reset();
+  });
+});
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    state.chapter = chip.dataset.ch;
+    reset();
+  });
+});
+document.addEventListener("keydown", e => {
+  if (state.mode === "flashcards") {
+    if (e.code === "Space") { e.preventDefault(); document.getElementById("fc")?.classList.toggle("flipped"); }
+    else if (e.key === "ArrowRight") next();
+    else if (e.key === "ArrowLeft") prev();
+  }
+});
+
+// init
+reset();
+</script>
+
+</body>
+</html>
